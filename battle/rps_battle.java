@@ -26,7 +26,6 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
     Image imgRock;
     Image imgPaper;
     Image imgScissors;
-    JButton myButton = new JButton("press");
     private int collisionRadius = 40;
     private int defaultCooldown = 30;
     private double maximumSpeed = 1.5;
@@ -78,8 +77,8 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         if(rps_battle_mode == "health") {
             newUnit.health = 100;
             newUnit.maxHealth = 100;
-            newUnit.attack_strong = 100;
-            newUnit.attack_weak = 0;
+            newUnit.attack_strong = 70;
+            newUnit.attack_weak = 30;
             newUnit.shield = 0;
             newUnit.maxShield = 0;
         }
