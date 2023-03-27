@@ -14,6 +14,7 @@ public class startup extends JFrame implements KeyListener, ActionListener {
 
     private Graphics2D buffer;
     private Image offscreen;
+    
     final int FRAME_WIDTH = 1000;
     final int FRAME_HEIGHT = 800;
 
@@ -68,11 +69,15 @@ public class startup extends JFrame implements KeyListener, ActionListener {
     }
 
     public void paint(Graphics g) {
-        offscreen = createImage(getSize().width, getSize().height);
+        offscreen = createImage(400, 400);
         buffer = (Graphics2D) offscreen.getGraphics();
         buffer.setColor(new Color(0, 0, 0));
-        buffer.fillRect(0, 0, getWidth(), getHeight());
-        g.drawImage(offscreen, 0, 0, this);
+        buffer.fillRect(0, 0, 400, 400);
+        g.drawImage(offscreen, 100, 100, this);
+        buffer.setColor(new Color(0, 0, 255));
+        buffer.fillRect(0, 0, 400, 400);        
+        g.drawImage(offscreen, 300, 300, this);
+
     }
 
     public void Update(Graphics gr) {
