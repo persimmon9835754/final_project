@@ -14,7 +14,6 @@ public class startup extends JFrame implements KeyListener, ActionListener {
 
     private Graphics2D buffer;
     private Image offscreen;
-    
     final int FRAME_WIDTH = 1000;
     final int FRAME_HEIGHT = 800;
 
@@ -32,7 +31,10 @@ public class startup extends JFrame implements KeyListener, ActionListener {
         final int FRAME_WIDTH = 1000;
         final int FRAME_HEIGHT = 800;
         startup frame = new startup();
-        frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+        //frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setUndecorated(true);
         frame.setVisible(true);
     }
 
@@ -46,16 +48,29 @@ public class startup extends JFrame implements KeyListener, ActionListener {
         // captures keypress
         switch (e.getKeyCode()) {
             case 49:
-                rps_battle battle = new rps_battle();
-                battle.setSize(FRAME_WIDTH, FRAME_HEIGHT);
-                battle.setVisible(true);
                 rps_battle.rps_battle_mode = "classic";
+                rps_battle battle = new rps_battle();
+                //battle.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+                //battle.setVisible(true);
+                battle.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                battle.setUndecorated(true);
+                battle.setVisible(true);
+                setVisible(false);
+                dispose();
                 break;
             case 50:
+                rps_battle.rps_battle_mode = "custom";
+                rps_battle.teamA_unit = "custom";
+                rps_battle.teamB_unit = "custom";
+                rps_battle.teamC_unit = "custom";
                 rps_battle battle_health = new rps_battle();
-                battle_health.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+                //battle_health.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+                //battle_health.setVisible(true);
+                battle_health.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                battle_health.setUndecorated(true);
                 battle_health.setVisible(true);
-                rps_battle.rps_battle_mode = "health";
+                setVisible(false);
+                dispose();
                 break;
         }
     }
@@ -69,15 +84,11 @@ public class startup extends JFrame implements KeyListener, ActionListener {
     }
 
     public void paint(Graphics g) {
-        offscreen = createImage(400, 400);
+        offscreen = createImage(getSize().width, getSize().height);
         buffer = (Graphics2D) offscreen.getGraphics();
         buffer.setColor(new Color(0, 0, 0));
-        buffer.fillRect(0, 0, 400, 400);
-        g.drawImage(offscreen, 100, 100, this);
-        buffer.setColor(new Color(0, 0, 255));
-        buffer.fillRect(0, 0, 400, 400);        
-        g.drawImage(offscreen, 300, 300, this);
-
+        buffer.fillRect(0, 0, getWidth(), getHeight());
+        g.drawImage(offscreen, 0, 0, this);
     }
 
     public void Update(Graphics gr) {
