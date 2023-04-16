@@ -31,10 +31,11 @@ public class startup extends JFrame implements KeyListener, ActionListener {
         final int FRAME_WIDTH = 1000;
         final int FRAME_HEIGHT = 800;
         startup frame = new startup();
-        //frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+        // frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
 
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        frame.setUndecorated(true);
+        // frame.setUndecorated(true);
+        frame.pack();
         frame.setVisible(true);
     }
 
@@ -50,10 +51,11 @@ public class startup extends JFrame implements KeyListener, ActionListener {
             case 49:
                 rps_battle.rps_battle_mode = "classic";
                 rps_battle battle = new rps_battle();
-                //battle.setSize(FRAME_WIDTH, FRAME_HEIGHT);
-                //battle.setVisible(true);
-                battle.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                battle.setUndecorated(true);
+                // battle.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+                // battle.setVisible(true);
+                battle.setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
+                battle.pack();
+                // battle.setUndecorated(true);
                 battle.setVisible(true);
                 setVisible(false);
                 dispose();
@@ -64,10 +66,11 @@ public class startup extends JFrame implements KeyListener, ActionListener {
                 rps_battle.teamB_unit = "custom";
                 rps_battle.teamC_unit = "custom";
                 rps_battle battle_health = new rps_battle();
-                //battle_health.setSize(FRAME_WIDTH, FRAME_HEIGHT);
-                //battle_health.setVisible(true);
-                battle_health.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                battle_health.setUndecorated(true);
+                // battle_health.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+                // battle_health.setVisible(true);
+                battle_health.setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
+                battle_health.pack();
+                // battle_health.setUndecorated(true);
                 battle_health.setVisible(true);
                 setVisible(false);
                 dispose();

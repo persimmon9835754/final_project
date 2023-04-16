@@ -1,8 +1,6 @@
 package battle;
 
-import javax.management.BadAttributeValueExpException;
 import javax.swing.*;
-import javax.xml.xpath.XPathEvaluationResult;
 import java.util.ArrayList;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -10,6 +8,15 @@ import java.awt.event.ActionEvent;
 import java.awt.Color;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.awt.Image;
+import javax.imageio.ImageIO;
+import java.io.IOException;
+import java.io.File;
+import java.io.FilenameFilter;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineEvent;
 
 public class rps_battle extends JFrame implements KeyListener, ActionListener {
     ArrayList<factions> teamA = new ArrayList<factions>();
@@ -22,31 +29,24 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
     private boolean inputUp;
     private boolean inputDown;
     private boolean inputRight;
-    private int unitCount = 10;
+    private int unitCount = 20;
     private int heroX = 0;
     private int heroY = 0;
-    Image imgRock = new ImageIcon("img/classic/rock.png").getImage();
-    Image imgPaper = new ImageIcon("img/classic/paper.png").getImage();
-    Image imgScissors = new ImageIcon("img/classic/scissors3.png").getImage();
-    Image imgCow = new ImageIcon("img/cow-pig-chicken/cow.png").getImage();
-    Image imgPig = new ImageIcon("img/cow-pig-chicken/pig.png").getImage();
-    Image imgChicken = new ImageIcon("img/cow-pig-chicken/chicken.png").getImage();
-    Image imgFries = new ImageIcon("img/fries-burger-drink/soda.png").getImage();
-    Image imgBurger = new ImageIcon("img/fries-burger-drink/hamburger.png").getImage();
-    Image imgDrink = new ImageIcon("img/fries-burger-drink/french-fries.png").getImage();
-    private int collisionRadius = 40;
+    Image imageTeamA;
+    Image imageTeamB;
+    Image imageTeamC;
+    private int collisionRadius;
     private int defaultCooldown = 30;
-    private double maximumSpeed = 1.5;
-    private int spawnWidth = 900;
-    private int spawnBuffer = 50;
-    private int spawnHeight = 700;
+    private double maximumSpeed = 2;
+    private int screenWidth;
+    private int screenHeight;
     private int threeSecondStart = 270;
     public static String rps_battle_mode = "";
     public static String teamA_unit = "";
     public static String teamB_unit = "";
     public static String teamC_unit = "";
-    public static int imageWidth = 50;
-    public static int imageHeight = 50;
+    public static int imageWidth;
+    public static int imageHeight;
 
     public rps_battle() {
         // starts timer on load, and adds key listener
@@ -55,22 +55,44 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         setLayout(new FlowLayout());
         addKeyListener(this);
         myTimer.start();
-        createTeams(unitCount, unitCount, unitCount);
-
         java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
         Font[] fonts = ge.getAllFonts();
         for (Font i : fonts) {
-            System.out.println(i.getName());
+            // System.out.println(i.getName());
         }
-        imgRock = imgRock.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
-        imgPaper = imgPaper.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
-        imgScissors = imgScissors.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
-        imgCow = imgCow.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
-        imgChicken = imgChicken.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
-        imgPig = imgPig.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
-        imgDrink = imgDrink.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
-        imgFries = imgFries.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
-        imgBurger = imgBurger.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
+        // your directory
+        try {
+            String imageFolder = "img/water-fire-tree";
+            File fileFolder = new File(imageFolder);
+            imageTeamA = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return name.startsWith("a-");
+                }
+            })[0]);
+            imageTeamB = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return name.startsWith("b-");
+                }
+            })[0]);
+            imageTeamC = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return name.startsWith("c-");
+                }
+            })[0]);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        imageWidth = tk.getScreenSize().width / 25;
+        imageHeight = imageWidth;
+        collisionRadius = imageWidth;
+        screenHeight = tk.getScreenSize().height - (imageHeight * 4);
+        screenWidth = tk.getScreenSize().width - (imageWidth * 4);
+        createTeams(unitCount, unitCount, unitCount);
+        imageTeamA = imageTeamA.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
+        imageTeamB = imageTeamB.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
+        imageTeamC = imageTeamC.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
     }
 
     // when you push the button it comes this method
@@ -79,10 +101,34 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         moveObjects();
         repaint();
         threeSecondStart--;
+
     }
 
     public void setMode(String mode) {
         this.rps_battle_mode = mode;
+    }
+
+    public static synchronized void playSound(final String url) {
+        new Thread(new Runnable() {
+            // The wrapper thread is unnecessary, unless it blocks on the
+            // Clip finishing; see comments.
+            public void run() {
+                try {
+                    Clip clip = AudioSystem.getClip();
+                    AudioInputStream inputStream = AudioSystem.getAudioInputStream(
+                            rps_battle.class.getResourceAsStream("/sounds/" + url));
+                            clip.addLineListener(event -> {
+                                if(LineEvent.Type.STOP.equals(event.getType())) {
+                                    clip.close();
+                                }
+                            });
+                    clip.open(inputStream);
+                    clip.start();
+                } catch (Exception e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+        }).start();
     }
 
     public factions generateUnit(int health, int maxHealth, int attack_strong, int attack_weak, int shield,
@@ -90,8 +136,8 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         // this generates a new unit, the faction is determined by which arraylist the
         // unit is stored in
         factions newUnit = new factions();
-        newUnit.xCoord = (int) (Math.random() * spawnWidth) + spawnBuffer;
-        newUnit.yCoord = (int) (Math.random() * spawnHeight) + spawnBuffer;
+        newUnit.xCoord = (int) (Math.random() * screenWidth) + imageWidth * 2;
+        newUnit.yCoord = (int) (Math.random() * screenHeight) + imageHeight * 2;
         double x = Math.random() * 100 - 50;
         double y = Math.random() * 100 - 50;
         newUnit.velX = getRandomDirection(x, 0, y, 0)[0];
@@ -212,36 +258,41 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         newFaction.maxHealth = oldFactions.maxHealth;
         return newFaction;
     }
-
+    public String randomSound() {
+        int randomPopSound = (int)(Math.random()*5)+1;
+        System.out.println(randomPopSound);
+        String soundFile = "pop" + randomPopSound + ".wav";
+        return soundFile;
+    }
     public void checkCollisions() {
         // bounces off the walls
         for (factions i : teamA) {
             // left and right wall collisions
-            if (i.xCoord > getWidth() - 25 || i.xCoord < 25) {
+            if (i.xCoord > getWidth() - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
                 i.velX *= -1;
                 i.xCoord += i.velX;
             }
-            if (i.yCoord > getHeight() - 25 || i.yCoord < 0) {
+            if (i.yCoord > getHeight() - (imageHeight / 2) || i.yCoord < (imageHeight / 2)) {
                 i.velY *= -1;
                 i.yCoord += i.velY;
             }
         }
         for (factions i : teamB) {
-            if (i.xCoord > getWidth() - 25 || i.xCoord < 25) {
+            if (i.xCoord > getWidth() - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
                 i.velX *= -1;
                 i.xCoord += i.velX;
             }
-            if (i.yCoord > getHeight() - 25 || i.yCoord < 0) {
+            if (i.yCoord > getHeight() - (imageHeight / 2) || i.yCoord < (imageHeight / 2)) {
                 i.velY *= -1;
                 i.yCoord += i.velY;
             }
         }
         for (factions i : teamC) {
-            if (i.xCoord > getWidth() - 25 || i.xCoord < 25) {
+            if (i.xCoord > getWidth() - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
                 i.velX *= -1;
                 i.xCoord += i.velX;
             }
-            if (i.yCoord > getHeight() - 25 || i.yCoord < 0) {
+            if (i.yCoord > getHeight() - (imageHeight / 2) || i.yCoord < (imageHeight / 2)) {
                 i.velY *= -1;
                 i.yCoord += i.velY;
             }
@@ -283,6 +334,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                             tempB.health = tempB.maxHealth;
                             teamA.add(teamA.size(), tempB);
                         }
+                        playSound(randomSound());
                         return;
                     }
                 }
@@ -323,6 +375,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                             tempC.health = tempC.maxHealth;
                             teamA.add(teamA.size(), tempC);
                         }
+                        playSound(randomSound());
                         return;
                     }
                 }
@@ -363,6 +416,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                             tempC.health = tempC.maxHealth;
                             teamB.add(teamB.size(), tempC);
                         }
+                        playSound(randomSound());
                         return;
                     }
                 }
@@ -428,8 +482,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         for (factions i : teamA) {
             int x = (int) i.xCoord;
             int y = (int) i.yCoord;
-            buffer.drawImage(getRandomImage(), x - 25, y - 17, null);
-
+            buffer.drawImage(imageTeamA, x - (imageWidth / 2), y - (imageHeight / 2), null);
             if (rps_battle_mode == "custom") {
                 buffer.setColor(Color.red);
                 buffer.fillRect(x - bar_pos_x, y + bar_pos_y, (int) (i.health * bar_width_scale), bar_height);
@@ -443,7 +496,9 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         for (factions i : teamB) {
             int x = (int) i.xCoord;
             int y = (int) i.yCoord;
-            buffer.drawImage(getRandomImage(), x - 25, y - 25, null);
+
+            buffer.drawImage(imageTeamB, x - (imageWidth / 2), y - (imageHeight / 2), null);
+
             if (rps_battle_mode == "custom") {
                 buffer.setColor(Color.red);
                 buffer.fillRect(x - bar_pos_x, y + bar_pos_y, (int) (i.health * bar_width_scale), bar_height);
@@ -457,7 +512,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         for (factions i : teamC) {
             int x = (int) i.xCoord;
             int y = (int) i.yCoord;
-            buffer.drawImage(getRandomImage(), x - 25, y + 14, null);
+            buffer.drawImage(imageTeamC, x - (imageWidth / 2), y - (imageHeight / 2), null);
             if (rps_battle_mode == "custom") {
                 buffer.setColor(Color.red);
                 buffer.fillRect(x - bar_pos_x, y + bar_pos_y, (int) (i.health * bar_width_scale), bar_height);
@@ -468,7 +523,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                 }
             }
         }
-        buffer.drawImage(imgRock, heroX, heroY, null);
+        buffer.drawImage(imageTeamA, heroX, heroY, null);
         buffer.setColor(Color.red);
         buffer.setFont(new Font("Comic Sans MS", Font.PLAIN, 50));
         String timeLeft = String.valueOf(threeSecondStart / 60);
@@ -477,22 +532,14 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         g.drawImage(offscreen, 0, 0, this);
     }
 
-    public Image getRandomImage() {
-        Image[] imageArray = new Image[9];
-        imageArray[0] = imgRock;
-        imageArray[1] = imgPaper;
-        imageArray[2] = imgScissors;
-        imageArray[3] = imgBurger;
-        imageArray[4] = imgDrink;
-        imageArray[5] = imgFries;
-        imageArray[6] = imgCow;
-        imageArray[7] = imgPig;
-        imageArray[8] = imgChicken;
-        return imageArray[(int) (Math.random() * 9)];
-    }
-
     public void Update(Graphics gr) {
-        // call the paint method
-        paint(gr);
+        // call th
+
+    
     }
+ 
+    // buffer.setColor(Color.red);
+    // 
+    //buffer.drawRect( x - (imageWidth / 2), y - (imageHeight / 2), imageWidth, imageHeight);
+
 }
