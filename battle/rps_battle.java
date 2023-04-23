@@ -62,7 +62,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         }
         // your directory
         try {
-            String imageFolder = "img/" + "10_bubble_burst";
+            String imageFolder = "img/" + "01_classic_rps";
             File fileFolder = new File(imageFolder);
             imageTeamA = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
@@ -93,8 +93,9 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         imageTeamA = imageTeamA.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
         imageTeamB = imageTeamB.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
         imageTeamC = imageTeamC.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
-        //BufferedImage TempImage = imageTeamA.;
-        tempImageWhite = (Image)(dye((BufferedImage)(imageTeamA), new Color(200,200,200,50)));
+        //BufferedImage TempImage = new BufferedImage(imageTeamA.getWidth(null),imageTeamA.getHeight(null), BufferedImage.TYPE_4BYTE_ABGR);
+        BufferedImage TempImage = convertToBufferedImage(imageTeamA);
+        tempImageWhite = (Image)(dye(TempImage, new Color(255,255,255,250)));
     }
 
     // when you push the button it comes this method
@@ -109,6 +110,16 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
     public void setMode(String mode) {
         this.rps_battle_mode = mode;
     }
+    public static BufferedImage convertToBufferedImage(Image image)
+{
+    BufferedImage newImage = new BufferedImage(
+        image.getWidth(null), image.getHeight(null),
+        BufferedImage.TYPE_INT_ARGB);
+    Graphics2D g = newImage.createGraphics();
+    g.drawImage(image, 0, 0, null);
+    g.dispose();
+    return newImage;
+}
 
     public BufferedImage dye(BufferedImage image, Color color)
     {
@@ -280,7 +291,6 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
     }
     public String randomSound() {
         int randomPopSound = (int)(Math.random()*5)+1;
-        System.out.println(randomPopSound);
         String soundFile = "pop" + randomPopSound + ".wav";
         return soundFile;
     }
