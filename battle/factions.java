@@ -11,7 +11,8 @@ public class factions {
     int attack_weak;
     int shield;
     int maxShield;
-
+    boolean regen;
+    double maxSpeed;
 
 }
 
