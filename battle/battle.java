@@ -11,17 +11,24 @@ import java.awt.image.BufferedImage;
 import java.awt.Image;
 import javax.imageio.ImageIO;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.io.File;
 import java.io.FilenameFilter;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineEvent; 
-public class rps_battle extends JFrame implements KeyListener, ActionListener {
+import javax.sound.sampled.LineEvent;
+import java.util.Scanner;
+import java.io.FileNotFoundException;
+
+// img file path: /mnt/chromeos/SMB/ed26bc8a3151bf71c2aa30ee422e94bb9a1b21408c3a0eb6cb55c1c06c4f14c4/_Andrew/GITA/
+public class battle extends JFrame implements KeyListener, ActionListener {
     ArrayList<factions> teamA = new ArrayList<factions>();
     ArrayList<factions> teamB = new ArrayList<factions>();
     ArrayList<factions> teamC = new ArrayList<factions>();
-    Timer myTimer = new Timer(8, this);
+    ArrayList<animation> animationImages = new ArrayList<animation>();
+    public int frameRate = 12;
+    Timer myTimer = new Timer(frameRate, this);
     private Graphics2D buffer;
     private Image offscreen;
     private boolean inputLeft;
@@ -34,21 +41,20 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
     Image imageTeamA;
     Image imageTeamB;
     Image imageTeamC;
-    Image tempImageWhite;
     private int collisionRadius;
     private int defaultCooldown = 30;
     private double maximumSpeed = 2;
     private int screenWidth;
     private int screenHeight;
-    private int threeSecondStart = 270;
-    public static String rps_battle_mode = "";
-    public static String teamA_unit = "";
-    public static String teamB_unit = "";
-    public static String teamC_unit = "";
+    private int threeSecondStart = (int) (1000 / frameRate) * 3;
     public static int imageWidth;
     public static int imageHeight;
+    public static Boolean sharedFolder = true;
+    String[][] teamStats = new String[3][9];
+    public static String factionFolder = "14_angry_animation";
+    public static String rps_battle_mode = "";
 
-    public rps_battle() {
+    public battle() {
         // starts timer on load, and adds key listener
         super("Button Test");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -62,27 +68,62 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         }
         // your directory
         try {
-            String imageFolder = "img/" + "01_classic_rps";
+            String imageFolder;
+            if (sharedFolder) {
+                imageFolder = "/mnt/chromeos/SMB/ed26bc8a3151bf71c2aa30ee422e94bb9a1b21408c3a0eb6cb55c1c06c4f14c4/_Andrew/GITA/img/"
+                        + factionFolder;
+                if (new File(imageFolder).exists()) {
+                    System.out.println("file exists");
+                }
+            } else {
+                imageFolder = "img/" + factionFolder;
+            }
             File fileFolder = new File(imageFolder);
-            imageTeamA = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
+            imageTeamA = new ImageIcon(fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return name.startsWith("a_");
                 }
-            })[0]);
-            imageTeamB = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
+            })[0].getName()).getImage();
+            
+            /* imageTeamB = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return name.startsWith("b_");
                 }
-            })[0]);
-            imageTeamC = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
+            })[0]); */
+
+            imageTeamB = new ImageIcon(fileFolder.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return name.startsWith("b_");
+                }
+            })[0].getName()).getImage();
+            imageTeamC = new ImageIcon(fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return name.startsWith("c_");
                 }
-            })[0]);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+            })[0].getName()).getImage();
+                File initializationFile = new File(imageFolder + "/config.ini");
+                Scanner initilizationScanner = new Scanner(initializationFile);
+                int lineCount = 0;
+                String gameMode = "";
+                while (initilizationScanner.hasNextLine()) {
+                    lineCount++;
+                    String data = initilizationScanner.nextLine();
+                    data = data.replaceAll("\s", "");
+                    String[] stringsOfInitValues = data.split(",");
+                    if (lineCount == 1) {
+                        gameMode = stringsOfInitValues[1];
+                    } else if (lineCount < 5) {
+                        for (int i = 0; i < stringsOfInitValues.length; i++)
+                            teamStats[lineCount - 2][i] = stringsOfInitValues[i];
+                        teamStats[lineCount - 2][8] = gameMode;
+                    }
+                    // System.out.println("Line " + lineCount + ": " + data);
+                }
+                initilizationScanner.close();
+            } catch (FileNotFoundException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+            }
         Toolkit tk = Toolkit.getDefaultToolkit();
         imageWidth = tk.getScreenSize().width / 25;
         imageHeight = imageWidth;
@@ -90,12 +131,10 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         screenHeight = tk.getScreenSize().height - (imageHeight * 4);
         screenWidth = tk.getScreenSize().width - (imageWidth * 4);
         createTeams(unitCount, unitCount, unitCount);
+        imageTeamA = convertToBufferedImage(imageTeamA);
         imageTeamA = imageTeamA.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
         imageTeamB = imageTeamB.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
         imageTeamC = imageTeamC.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
-        //BufferedImage TempImage = new BufferedImage(imageTeamA.getWidth(null),imageTeamA.getHeight(null), BufferedImage.TYPE_4BYTE_ABGR);
-        BufferedImage TempImage = convertToBufferedImage(imageTeamA);
-        tempImageWhite = (Image)(dye(TempImage, new Color(255,255,255,250)));
     }
 
     // when you push the button it comes this method
@@ -104,33 +143,26 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         moveObjects();
         repaint();
         threeSecondStart--;
-
     }
 
-    public void setMode(String mode) {
-        this.rps_battle_mode = mode;
+    public static BufferedImage convertToBufferedImage(Image image) {
+        BufferedImage newImage = new BufferedImage(40, 40,
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = newImage.createGraphics();
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+        return newImage;
     }
-    public static BufferedImage convertToBufferedImage(Image image)
-{
-    BufferedImage newImage = new BufferedImage(
-        image.getWidth(null), image.getHeight(null),
-        BufferedImage.TYPE_INT_ARGB);
-    Graphics2D g = newImage.createGraphics();
-    g.drawImage(image, 0, 0, null);
-    g.dispose();
-    return newImage;
-}
 
-    public BufferedImage dye(BufferedImage image, Color color)
-    {
+    public BufferedImage dye(BufferedImage image, Color color) {
         int w = image.getWidth();
         int h = image.getHeight();
-        BufferedImage dyed = new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);
+        BufferedImage dyed = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = dyed.createGraphics();
-        g.drawImage(image, 0,0, null);
+        g.drawImage(image, 0, 0, null);
         g.setComposite(AlphaComposite.SrcAtop);
         g.setColor(color);
-        g.fillRect(0,0,w,h);
+        g.fillRect(0, 0, w, h);
         g.dispose();
         return dyed;
     }
@@ -143,12 +175,12 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                 try {
                     Clip clip = AudioSystem.getClip();
                     AudioInputStream inputStream = AudioSystem.getAudioInputStream(
-                            rps_battle.class.getResourceAsStream("/sounds/" + url));
-                            clip.addLineListener(event -> {
-                                if(LineEvent.Type.STOP.equals(event.getType())) {
-                                    clip.close();
-                                }
-                            });
+                            battle.class.getResourceAsStream("/sounds/" + url));
+                    clip.addLineListener(event -> {
+                        if (LineEvent.Type.STOP.equals(event.getType())) {
+                            clip.close();
+                        }
+                    });
                     clip.open(inputStream);
                     clip.start();
                 } catch (Exception e) {
@@ -180,29 +212,24 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         return newUnit;
     }
 
-    public factions getUnit(String type) {
-        switch (type) {
-            case "classic":
-                return generateUnit(100, 100, 100, 0, 0, 0, false, 2);
-            case "chicken":
-                return generateUnit(50, 50, 75, 75, 200, 200, false, 2);
-            case "custom":
-                return generateUnit(100, 100, 70, 20, 100, 100, false, 1);
-        }
-        return generateUnit(100, 100, 100, 0, 0, 0, false, 1);
+    public factions getUnit(int teamNumber) {
+        return generateUnit(Integer.parseInt(teamStats[teamNumber][1]), Integer.parseInt(teamStats[teamNumber][1]),
+                Integer.parseInt(teamStats[teamNumber][5]), Integer.parseInt(teamStats[teamNumber][4]),
+                Integer.parseInt(teamStats[teamNumber][3]), Integer.parseInt(teamStats[teamNumber][3]),
+                (Integer.parseInt(teamStats[teamNumber][2]) == 0) ? false : true,
+                Double.parseDouble(teamStats[teamNumber][6]));
     }
 
     public void createTeams(int size1, int size2, int size3) {
         // health, maxHealth, attack_strong, attack_weak, shield, maxShield
         for (int i = 0; i < size1; i++) {
-            teamA.add(teamA.size(), getUnit(teamA_unit));
+            teamA.add(teamA.size(), getUnit(0));
         }
         for (int i = 0; i < size2; i++) {
-            teamB.add(teamB.size(), getUnit(teamB_unit));
-
+            teamB.add(teamB.size(), getUnit(1));
         }
         for (int i = 0; i < size3; i++) {
-            teamC.add(teamC.size(), getUnit(teamC_unit));
+            teamC.add(teamC.size(), getUnit(2));
         }
         System.out.println(
                 "Number of units before collisions: " + teamA.size() + " " + teamB.size() + " " + teamC.size());
@@ -220,13 +247,13 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                         teamC.remove(teamC.size() - 1);
                     }
                     while (teamA.size() < unitCount) {
-                        teamA.add(teamA.size(), getUnit(teamA_unit));
+                        teamA.add(teamA.size(), getUnit(0));
                     }
                     while (teamB.size() < unitCount) {
-                        teamB.add(teamB.size(), getUnit(teamB_unit));
+                        teamB.add(teamB.size(), getUnit(1));
                     }
                     while (teamC.size() < unitCount) {
-                        teamC.add(teamC.size(), getUnit(teamC_unit));
+                        teamC.add(teamC.size(), getUnit(2));
                     }
                     checkCollisions();
                 }
@@ -274,31 +301,67 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         if (teamA.size() != (unitCount * 3) && teamB.size() != unitCount * 3 && teamC.size() != unitCount * 3) {
             checkCollisions();
         }
+        for (int i = 0; i < animationImages.size(); i++) {
+            animationImages.get(i).timeLeft--;
+            if (animationImages.get(i).timeLeft <= 0) {
+                animationImages.remove(i);
+            }
+        }
     }
 
-    public factions transferProperties(factions newFaction, factions oldFactions) {
-        newFaction.xCoord = oldFactions.xCoord;
-        newFaction.yCoord = oldFactions.yCoord;
-        newFaction.attack_strong = oldFactions.attack_strong;
-        newFaction.attack_weak = oldFactions.attack_weak;
-        newFaction.shield = oldFactions.shield;
-        newFaction.maxShield = oldFactions.maxShield;
-        newFaction.health = oldFactions.health;
-        newFaction.maxHealth = oldFactions.maxHealth;
-        newFaction.regen = oldFactions.regen;
-        newFaction.maxSpeed = oldFactions.maxSpeed;
-        return newFaction;
+    public factions transferProperties(factions tempFaction, factions oldFactions, factions newFactions) {
+        tempFaction.xCoord = oldFactions.xCoord;
+        tempFaction.yCoord = oldFactions.yCoord;
+        tempFaction.attack_strong = newFactions.attack_strong;
+        tempFaction.attack_weak = newFactions.attack_weak;
+        tempFaction.shield = newFactions.shield;
+        tempFaction.maxShield = newFactions.maxShield;
+        tempFaction.health = newFactions.health;
+        tempFaction.maxHealth = newFactions.maxHealth;
+        tempFaction.regen = newFactions.regen;
+        tempFaction.maxSpeed = newFactions.maxSpeed;
+        return tempFaction;
     }
+
     public String randomSound() {
-        int randomPopSound = (int)(Math.random()*5)+1;
+        int randomPopSound = (int) (Math.random() * 5) + 1;
         String soundFile = "pop" + randomPopSound + ".wav";
         return soundFile;
     }
+
+    public void addWhiteImage(factions imageFactions, Image imageToDisplay) {
+        animation tempAnimation = new animation();
+        imageToDisplay = (Image) (dye(convertToBufferedImage(imageToDisplay), new Color(179, 179, 179, 255)));
+        // - GRAY imageToDisplay = (Image) (dye(convertToBufferedImage(imageToDisplay),
+        // new Color(77, 77, 77, 255)));
+        // tempAnimation.createAnimation(imageFactions.xCoord, imageFactions.yCoord, 60,
+        // imageToDisplay,
+        // imageFactions.velX, imageFactions.velY, 1);
+        tempAnimation.createAnimation(imageFactions.xCoord, imageFactions.yCoord, 10, imageToDisplay,
+                0, 0, 1);
+        animationImages.add(animationImages.size(), tempAnimation);
+    }
+
     public void checkCollisions() {
         // bounces off the walls
+        for (animation i : animationImages) {
+            i.xCoord += i.velX;
+            i.yCoord += i.velY;
+            if (i.timeLeft == 5) {
+                i.imageIcon = (Image) (dye(convertToBufferedImage(i.imageIcon), new Color(77, 77, 77, 255)));
+            }
+            /*
+             * if (i.timeLeft < 30) {
+             * i.opacity -= 1 / (0.15 * 1000 / frameRate);
+             * if (i.opacity <= 0) {
+             * i.opacity = 0;
+             * }
+             * }
+             */
+        }
         for (factions i : teamA) {
             // left and right wall collisions
-            if(i.regen && i.health < i.maxHealth) {
+            if (i.regen && i.health < i.maxHealth) {
                 i.health += 1;
             }
             if (i.xCoord > getWidth() - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
@@ -311,7 +374,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
             }
         }
         for (factions i : teamB) {
-            if(i.regen && i.health < i.maxHealth) {
+            if (i.regen && i.health < i.maxHealth) {
                 i.health += 1;
             }
             if (i.xCoord > getWidth() - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
@@ -324,7 +387,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
             }
         }
         for (factions i : teamC) {
-            if(i.regen && i.health < i.maxHealth) {
+            if (i.regen && i.health < i.maxHealth) {
                 i.health += 1;
             }
             if (i.xCoord > getWidth() - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
@@ -336,7 +399,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                 i.yCoord += i.velY;
             }
         }
-        if (threeSecondStart < 0 || threeSecondStart == 180) {
+        if (threeSecondStart < 0) {
             for (factions a : teamA) {
                 for (factions b : teamB) {
                     if (Math.abs(a.xCoord - b.xCoord) < collisionRadius
@@ -356,18 +419,20 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                         factions tempA = new factions();
                         tempA.velX = getRandomDirection(a.xCoord, b.xCoord, a.yCoord, b.yCoord, a.maxSpeed)[0];
                         tempA.velY = getRandomDirection(a.xCoord, b.xCoord, a.yCoord, b.yCoord, a.maxSpeed)[1];
-                        tempA = transferProperties(tempA, a);
+                        tempA = transferProperties(tempA, a, b);
                         factions tempB = new factions();
                         tempB.velX = getRandomDirection(b.xCoord, a.xCoord, b.yCoord, a.yCoord, b.maxSpeed)[0];
                         tempB.velY = getRandomDirection(b.xCoord, a.xCoord, b.yCoord, a.yCoord, b.maxSpeed)[1];
-                        tempB = transferProperties(tempB, b);
+                        tempB = transferProperties(tempB, b, a);
                         if (a.health <= 0) {
+                            addWhiteImage(a, imageTeamA);
                             teamA.remove(a);
                             tempA.shield = tempA.maxShield;
                             tempA.health = tempA.maxHealth;
                             teamB.add(teamB.size(), tempA);
                         }
                         if (b.health <= 0) {
+                            addWhiteImage(b, imageTeamB);
                             teamB.remove(b);
                             tempB.shield = tempB.maxShield;
                             tempB.health = tempB.maxHealth;
@@ -397,18 +462,20 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                         factions tempA = new factions();
                         tempA.velX = getRandomDirection(a.xCoord, c.xCoord, a.yCoord, c.yCoord, a.maxSpeed)[0];
                         tempA.velY = getRandomDirection(a.xCoord, c.xCoord, a.yCoord, c.yCoord, a.maxSpeed)[1];
-                        tempA = transferProperties(tempA, a);
+                        tempA = transferProperties(tempA, a, c);
                         factions tempC = new factions();
                         tempC.velX = getRandomDirection(c.xCoord, a.xCoord, c.yCoord, a.yCoord, c.maxSpeed)[0];
                         tempC.velY = getRandomDirection(c.xCoord, a.xCoord, c.yCoord, a.yCoord, c.maxSpeed)[1];
-                        tempC = transferProperties(tempC, c);
+                        tempC = transferProperties(tempC, c, a);
                         if (a.health <= 0) {
+                            addWhiteImage(a, imageTeamA);
                             teamA.remove(a);
                             tempA.shield = tempA.maxShield;
                             tempA.health = tempA.maxHealth;
                             teamC.add(teamC.size(), tempA);
                         }
                         if (c.health <= 0) {
+                            addWhiteImage(c, imageTeamC);
                             teamC.remove(c);
                             tempC.shield = tempC.maxShield;
                             tempC.health = tempC.maxHealth;
@@ -438,18 +505,20 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                         factions tempB = new factions();
                         tempB.velX = getRandomDirection(b.xCoord, c.xCoord, b.yCoord, c.yCoord, b.maxSpeed)[0];
                         tempB.velY = getRandomDirection(b.xCoord, c.xCoord, b.yCoord, c.yCoord, b.maxSpeed)[1];
-                        tempB = transferProperties(tempB, b);
+                        tempB = transferProperties(tempB, b, c);
                         factions tempC = new factions();
                         tempC.velX = getRandomDirection(c.xCoord, b.xCoord, c.yCoord, b.yCoord, c.maxSpeed)[0];
                         tempC.velY = getRandomDirection(c.xCoord, b.xCoord, c.yCoord, b.yCoord, c.maxSpeed)[1];
-                        tempC = transferProperties(tempC, c);
+                        tempC = transferProperties(tempC, c, b);
                         if (b.health <= 0) {
+                            addWhiteImage(b, imageTeamB);
                             teamB.remove(b);
                             tempB.shield = tempB.maxShield;
                             tempB.health = tempB.maxHealth;
                             teamC.add(teamC.size(), tempB);
                         }
                         if (c.health <= 0) {
+                            addWhiteImage(c, imageTeamC);
                             teamC.remove(c);
                             tempC.shield = tempC.maxShield;
                             tempC.health = tempC.maxHealth;
@@ -513,11 +582,19 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         int bar_pos_x = 18;
         int bar_pos_y = 40;
         int shield_bar_pos_y = 44;
-
         offscreen = createImage(getSize().width, getSize().height);
         buffer = (Graphics2D) offscreen.getGraphics();
         buffer.setColor(new Color(0, 0, 0));
         buffer.fillRect(0, 0, getWidth(), getHeight());
+        for (animation i : animationImages) {
+            AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, i.opacity);
+            buffer.setComposite(ac);
+            int x = (int) i.xCoord;
+            int y = (int) i.yCoord;
+            buffer.drawImage(i.imageIcon, x - (imageWidth / 2), y - (imageHeight / 2), null);
+        }
+        AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1);
+        buffer.setComposite(ac);
         for (factions i : teamA) {
             int x = (int) i.xCoord;
             int y = (int) i.yCoord;
@@ -535,9 +612,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
         for (factions i : teamB) {
             int x = (int) i.xCoord;
             int y = (int) i.yCoord;
-
             buffer.drawImage(imageTeamB, x - (imageWidth / 2), y - (imageHeight / 2), null);
-
             if (rps_battle_mode == "custom") {
                 buffer.setColor(Color.red);
                 buffer.fillRect(x - bar_pos_x, y + bar_pos_y, (int) (i.health * bar_width_scale), bar_height);
@@ -562,7 +637,7 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
                 }
             }
         }
-        buffer.drawImage(tempImageWhite, heroX, heroY, null);
+        buffer.drawImage(imageTeamA, heroX, heroY, null);
         buffer.setColor(Color.red);
         buffer.setFont(new Font("Comic Sans MS", Font.PLAIN, 50));
         String timeLeft = String.valueOf(threeSecondStart / 60);
@@ -573,12 +648,9 @@ public class rps_battle extends JFrame implements KeyListener, ActionListener {
 
     public void Update(Graphics gr) {
         // call th
-
-    
     }
- 
     // buffer.setColor(Color.red);
-    // 
-    //buffer.drawRect( x - (imageWidth / 2), y - (imageHeight / 2), imageWidth, imageHeight);
-
+    //
+    // buffer.drawRect( x - (imageWidth / 2), y - (imageHeight / 2), imageWidth,
+    // imageHeight);
 }
