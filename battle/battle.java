@@ -49,7 +49,7 @@ public class battle extends JFrame implements KeyListener, ActionListener {
     private int threeSecondStart = (int) (1000 / frameRate) * 3;
     public static int imageWidth;
     public static int imageHeight;
-    public static Boolean sharedFolder = true;
+    public static Boolean sharedFolder = false;
     String[][] teamStats = new String[3][9];
     public static String factionFolder = "14_angry_animation";
     public static String rps_battle_mode = "";
@@ -79,7 +79,7 @@ public class battle extends JFrame implements KeyListener, ActionListener {
                 imageFolder = "img/" + factionFolder;
             }
             File fileFolder = new File(imageFolder);
-            imageTeamA = new ImageIcon(fileFolder.listFiles(new FilenameFilter() {
+            imageTeamA = new ImageIcon(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return name.startsWith("a_");
                 }
@@ -91,12 +91,12 @@ public class battle extends JFrame implements KeyListener, ActionListener {
                 }
             })[0]); */
 
-            imageTeamB = new ImageIcon(fileFolder.listFiles(new FilenameFilter() {
+            imageTeamB = new ImageIcon(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return name.startsWith("b_");
                 }
             })[0].getName()).getImage();
-            imageTeamC = new ImageIcon(fileFolder.listFiles(new FilenameFilter() {
+            imageTeamC = new ImageIcon(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return name.startsWith("c_");
                 }
@@ -131,7 +131,7 @@ public class battle extends JFrame implements KeyListener, ActionListener {
         screenHeight = tk.getScreenSize().height - (imageHeight * 4);
         screenWidth = tk.getScreenSize().width - (imageWidth * 4);
         createTeams(unitCount, unitCount, unitCount);
-        imageTeamA = convertToBufferedImage(imageTeamA);
+        //imageTeamA = convertToBufferedImage(imageTeamA);
         imageTeamA = imageTeamA.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
         imageTeamB = imageTeamB.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
         imageTeamC = imageTeamC.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
