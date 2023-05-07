@@ -38,7 +38,7 @@ public class startup extends JFrame implements KeyListener, ActionListener {
     final int FRAME_WIDTH = 1000;
     final int FRAME_HEIGHT = 800;
     ArrayList<Image> arrayImages = new ArrayList<Image>();
-    String imageFolderLocation= "/mnt/chromeos/SMB/ed26bc8a3151bf71c2aa30ee422e94bb9a1b21408c3a0eb6cb55c1c06c4f14c4/_Andrew/GITA/img/";
+    String imageFolderLocation = "/mnt/chromeos/SMB/ed26bc8a3151bf71c2aa30ee422e94bb9a1b21408c3a0eb6cb55c1c06c4f14c4/_Andrew/GITA/img/";
 
     public startup() {
         // starts timer on load, and adds key listener
@@ -54,6 +54,7 @@ public class startup extends JFrame implements KeyListener, ActionListener {
             imageFolderLocation = "img/";
         }
         loadImages();
+        //repaint();
     }
 
     public static void main(String[] args) {
@@ -69,7 +70,7 @@ public class startup extends JFrame implements KeyListener, ActionListener {
     // when you push the button it comes this method
     public void actionPerformed(ActionEvent event) {
         Object objSource = event.getSource();
-        repaint();
+        
     }
 
     public void launchBattleClassicMode() {
@@ -120,11 +121,11 @@ public class startup extends JFrame implements KeyListener, ActionListener {
 
     public void loadImages() {
 
-        
         File fileFolder = new File(imageFolderLocation);
         File[] subFolders = (fileFolder.listFiles());
         Arrays.sort(subFolders);
         for (File imageFolder : subFolders) {
+            //System.out.println(imageFolder.getName());
             getSprites(imageFolder.getName());
         }
     }
@@ -132,49 +133,45 @@ public class startup extends JFrame implements KeyListener, ActionListener {
     public void getSprites(String folder) {
         int width = 40;
         int height = width;
-        try {
-            String imageFolder;
-            if (battle.sharedFolder) {
-                imageFolder = "/mnt/chromeos/SMB/ed26bc8a3151bf71c2aa30ee422e94bb9a1b21408c3a0eb6cb55c1c06c4f14c4/_Andrew/GITA/img/"
-                        + folder;
-            } else {
-                imageFolder = "img/" + folder;
-            }
-            if (new File(imageFolder).exists()) {
-                System.out.println("file exists");
-                File fileFolder = new File(imageFolder);
-                if ((fileFolder.listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        if (name.startsWith("a_") || name.startsWith("b_") || name.startsWith("c_"))
-                            return true;
-                        return false;
-                    }
-                })).length > 0) {
-                    Image tempImage = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
-                        public boolean accept(File dir, String name) {
-                            return name.startsWith("a_");
-                        }
-                    })[0]);
-                    tempImage = tempImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                    arrayImages.add(arrayImages.size(), tempImage);
-                    tempImage = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
-                        public boolean accept(File dir, String name) {
-                            return name.startsWith("b_");
-                        }
-                    })[0]);
-                    tempImage = tempImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                    arrayImages.add(arrayImages.size(), tempImage);
-                    tempImage = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
-                        public boolean accept(File dir, String name) {
-                            return name.startsWith("c_");
-                        }
-                    })[0]);
-                    tempImage = tempImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                    arrayImages.add(arrayImages.size(), tempImage);
+        String imageFolder;
+        
+            imageFolder = "img/" + folder;
+        if (new File(imageFolder).exists()) {
+            System.out.println("file exists");
+            File fileFolder = new File(imageFolder);
+            if ((fileFolder.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    if (name.startsWith("a_") || name.startsWith("b_") || name.startsWith("c_"))
+                        return true;
+                    return false;
                 }
+            })).length > 0) {
+                Image tempImage = new ImageIcon(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        return name.startsWith("a_");
+
+                    }
+                })[0].getName()).getImage();
+                tempImage = tempImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                arrayImages.add(arrayImages.size(), tempImage);
+                
+                /* tempImage = new ImageIcon(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        return name.startsWith("b_");
+                    }
+                })[0].getName()).getImage();
+                tempImage = tempImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                arrayImages.add(arrayImages.size(), tempImage);
+
+                tempImage = new ImageIcon(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        if(name.startsWith("c_"))System.out.println(imageFolder + "/" + name);
+                        return name.startsWith("c_");
+                    }
+                })[0].getName()).getImage();
+                tempImage = tempImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+                arrayImages.add(arrayImages.size(), tempImage); */
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -185,6 +182,7 @@ public class startup extends JFrame implements KeyListener, ActionListener {
         buffer.fillRect(0, 0, getWidth(), getHeight());
         int x = 50;
         int y = 100;
+        System.out.println(arrayImages.size());
         for (Image i : arrayImages) {
             buffer.drawImage(i, x, y, null);
             x += 50;
