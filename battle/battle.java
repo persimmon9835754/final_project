@@ -9,9 +9,9 @@ import java.awt.Color;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.Image;
-import javax.imageio.ImageIO;
+/* import javax.imageio.ImageIO;
 import java.io.IOException;
-import java.lang.reflect.Array;
+import java.lang.reflect.Array; */
 import java.io.File;
 import java.io.FilenameFilter;
 import javax.sound.sampled.AudioInputStream;
@@ -44,14 +44,15 @@ public class battle extends JFrame implements KeyListener, ActionListener {
     private int collisionRadius;
     private int defaultCooldown = 30;
     private double maximumSpeed = 2;
-    private int screenWidth;
-    private int screenHeight;
+    private final int screenWidth = 1000;
+    private final int screenHeight = 750;
+    private int imageBoundsWidth;
+    private int imageBoundsHeight;
     private int threeSecondStart = (int) (1000 / frameRate) * 3;
     public static int imageWidth;
     public static int imageHeight;
-    public static Boolean sharedFolder = false;
     String[][] teamStats = new String[3][9];
-    public static String factionFolder = "14_angry_animation";
+    public static String factionFolder = "01_classic_rps";
     public static String rps_battle_mode = "";
 
     public battle() {
@@ -67,74 +68,78 @@ public class battle extends JFrame implements KeyListener, ActionListener {
             // System.out.println(i.getName());
         }
         // your directory
+
         try {
             String imageFolder;
-            if (sharedFolder) {
-                imageFolder = "/mnt/chromeos/SMB/ed26bc8a3151bf71c2aa30ee422e94bb9a1b21408c3a0eb6cb55c1c06c4f14c4/_Andrew/GITA/img/"
-                        + factionFolder;
-                if (new File(imageFolder).exists()) {
-                    System.out.println("file exists");
-                }
-            } else {
-                imageFolder = "img/" + factionFolder;
-            }
+
+            imageFolder = "img/" + factionFolder;
             File fileFolder = new File(imageFolder);
-            imageTeamA = new ImageIcon(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
+            String filePathA = imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return name.startsWith("a_");
                 }
-            })[0].getName()).getImage();
-            
-            /* imageTeamB = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
+            })[0].getName();
+            String filePathB = imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return name.startsWith("b_");
                 }
-            })[0]); */
-
-            imageTeamB = new ImageIcon(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.startsWith("b_");
-                }
-            })[0].getName()).getImage();
-            imageTeamC = new ImageIcon(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
+            })[0].getName();
+            String filePathC = imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     return name.startsWith("c_");
                 }
-            })[0].getName()).getImage();
-                File initializationFile = new File(imageFolder + "/config.ini");
-                Scanner initilizationScanner = new Scanner(initializationFile);
-                int lineCount = 0;
-                String gameMode = "";
-                while (initilizationScanner.hasNextLine()) {
-                    lineCount++;
-                    String data = initilizationScanner.nextLine();
-                    data = data.replaceAll("\s", "");
-                    String[] stringsOfInitValues = data.split(",");
-                    if (lineCount == 1) {
-                        gameMode = stringsOfInitValues[1];
-                    } else if (lineCount < 5) {
-                        for (int i = 0; i < stringsOfInitValues.length; i++)
-                            teamStats[lineCount - 2][i] = stringsOfInitValues[i];
-                        teamStats[lineCount - 2][8] = gameMode;
-                    }
-                    // System.out.println("Line " + lineCount + ": " + data);
+            })[0].getName();
+            imageTeamA = new ImageIcon(filePathA).getImage();
+            imageTeamB = new ImageIcon(filePathB).getImage();
+            imageTeamC = new ImageIcon(filePathC).getImage();
+
+            /*
+             * imageTeamB = ImageIO.read(fileFolder.listFiles(new FilenameFilter() {
+             * public boolean accept(File dir, String name) {
+             * return name.startsWith("b_");
+             * }
+             * })[0]);
+             */
+
+            File initializationFile = new File(imageFolder + "/config.ini");
+            Scanner initilizationScanner = new Scanner(initializationFile);
+            int lineCount = 0;
+            String gameMode = "";
+            while (initilizationScanner.hasNextLine()) {
+                lineCount++;
+                String data = initilizationScanner.nextLine();
+                data = data.replaceAll("\s", "");
+                String[] stringsOfInitValues = data.split(",");
+                if (lineCount == 1) {
+                    gameMode = stringsOfInitValues[1];
+                } else if (lineCount < 5) {
+                    for (int i = 0; i < stringsOfInitValues.length; i++)
+                        teamStats[lineCount - 2][i] = stringsOfInitValues[i];
+                    teamStats[lineCount - 2][8] = gameMode;
                 }
-                initilizationScanner.close();
-            } catch (FileNotFoundException e) {
-                System.out.println("An error occurred.");
-                e.printStackTrace();
+                // System.out.println("Line " + lineCount + ": " + data);
             }
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        imageWidth = tk.getScreenSize().width / 25;
-        imageHeight = imageWidth;
-        collisionRadius = imageWidth;
-        screenHeight = tk.getScreenSize().height - (imageHeight * 4);
-        screenWidth = tk.getScreenSize().width - (imageWidth * 4);
+            initilizationScanner.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        setup();
+    }
+
+
+    public void setup() {
+        imageWidth = 40;
+        imageHeight = 40;
+        collisionRadius = 40;
+        imageBoundsHeight = screenHeight- (imageHeight * 4);
+        imageBoundsWidth = screenWidth - (imageWidth * 4);
         createTeams(unitCount, unitCount, unitCount);
-        //imageTeamA = convertToBufferedImage(imageTeamA);
-        imageTeamA = imageTeamA.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
-        imageTeamB = imageTeamB.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
-        imageTeamC = imageTeamC.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
+        // imageTeamA = convertToBufferedImage(imageTeamA);
+        imageTeamA = imageTeamA.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
+        imageTeamB = imageTeamB.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
+        imageTeamC = imageTeamC.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
+        System.out.println(Frame.WIDTH + ", " + Frame.HEIGHT);
     }
 
     // when you push the button it comes this method
@@ -168,26 +173,27 @@ public class battle extends JFrame implements KeyListener, ActionListener {
     }
 
     public static synchronized void playSound(final String url) {
-        new Thread(new Runnable() {
-            // The wrapper thread is unnecessary, unless it blocks on the
-            // Clip finishing; see comments.
-            public void run() {
-                try {
-                    Clip clip = AudioSystem.getClip();
-                    AudioInputStream inputStream = AudioSystem.getAudioInputStream(
-                            battle.class.getResourceAsStream("/sounds/" + url));
-                    clip.addLineListener(event -> {
-                        if (LineEvent.Type.STOP.equals(event.getType())) {
-                            clip.close();
-                        }
-                    });
-                    clip.open(inputStream);
-                    clip.start();
-                } catch (Exception e) {
-                    System.err.println(e.getMessage());
-                }
-            }
-        }).start();
+        
+        // new Thread(new Runnable() {
+        //     // The wrapper thread is unnecessary, unless it blocks on the
+        //     // Clip finishing; see comments.
+        //     public void run() {
+        //         try {
+        //             Clip clip = AudioSystem.getClip();
+        //             AudioInputStream inputStream = AudioSystem.getAudioInputStream(
+        //                     battle.class.getResourceAsStream("/sounds/" + url));
+        //             clip.addLineListener(event -> {
+        //                 if (LineEvent.Type.STOP.equals(event.getType())) {
+        //                     clip.close();
+        //                 }
+        //             });
+        //             clip.open(inputStream);
+        //             clip.start();
+        //         } catch (Exception e) {
+        //             System.err.println(e.getMessage());
+        //         }
+        //     }
+        // }).start();
     }
 
     public factions generateUnit(int health, int maxHealth, int attack_strong, int attack_weak, int shield,
@@ -195,8 +201,8 @@ public class battle extends JFrame implements KeyListener, ActionListener {
         // this generates a new unit, the faction is determined by which arraylist the
         // unit is stored in
         factions newUnit = new factions();
-        newUnit.xCoord = (int) (Math.random() * screenWidth) + imageWidth * 2;
-        newUnit.yCoord = (int) (Math.random() * screenHeight) + imageHeight * 2;
+        newUnit.xCoord = (int) (Math.random() * imageBoundsWidth) + imageWidth * 2;
+        newUnit.yCoord = (int) (Math.random() * imageBoundsHeight) + imageHeight/2;
         double x = Math.random() * 100 - 50;
         double y = Math.random() * 100 - 50;
         newUnit.maxSpeed = maxSpeed;
@@ -364,11 +370,11 @@ public class battle extends JFrame implements KeyListener, ActionListener {
             if (i.regen && i.health < i.maxHealth) {
                 i.health += 1;
             }
-            if (i.xCoord > getWidth() - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
+            if (i.xCoord > screenWidth - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
                 i.velX *= -1;
                 i.xCoord += i.velX;
             }
-            if (i.yCoord > getHeight() - (imageHeight / 2) || i.yCoord < (imageHeight / 2)) {
+            if (i.yCoord > screenHeight - (imageHeight) || i.yCoord < (imageHeight / 2)) {
                 i.velY *= -1;
                 i.yCoord += i.velY;
             }
@@ -377,11 +383,11 @@ public class battle extends JFrame implements KeyListener, ActionListener {
             if (i.regen && i.health < i.maxHealth) {
                 i.health += 1;
             }
-            if (i.xCoord > getWidth() - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
+            if (i.xCoord > screenWidth - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
                 i.velX *= -1;
                 i.xCoord += i.velX;
             }
-            if (i.yCoord > getHeight() - (imageHeight / 2) || i.yCoord < (imageHeight / 2)) {
+            if (i.yCoord > screenHeight - (imageHeight) || i.yCoord < (imageHeight / 2)) {
                 i.velY *= -1;
                 i.yCoord += i.velY;
             }
@@ -390,14 +396,16 @@ public class battle extends JFrame implements KeyListener, ActionListener {
             if (i.regen && i.health < i.maxHealth) {
                 i.health += 1;
             }
-            if (i.xCoord > getWidth() - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
+            if (i.xCoord > screenWidth - (imageWidth / 2) || i.xCoord < (imageWidth / 2)) {
                 i.velX *= -1;
                 i.xCoord += i.velX;
             }
-            if (i.yCoord > getHeight() - (imageHeight / 2) || i.yCoord < (imageHeight / 2)) {
+            if (i.yCoord > screenHeight - (imageHeight) || i.yCoord < (imageHeight / 2)) {
                 i.velY *= -1;
                 i.yCoord += i.velY;
+                System.out.println(i.yCoord);
             }
+            
         }
         if (threeSecondStart < 0) {
             for (factions a : teamA) {
@@ -582,10 +590,10 @@ public class battle extends JFrame implements KeyListener, ActionListener {
         int bar_pos_x = 18;
         int bar_pos_y = 40;
         int shield_bar_pos_y = 44;
-        offscreen = createImage(getSize().width, getSize().height);
+        offscreen = createImage(screenWidth, screenHeight);
         buffer = (Graphics2D) offscreen.getGraphics();
         buffer.setColor(new Color(0, 0, 0));
-        buffer.fillRect(0, 0, getWidth(), getHeight());
+        buffer.fillRect(0, 0, screenWidth, screenHeight);
         for (animation i : animationImages) {
             AlphaComposite ac = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, i.opacity);
             buffer.setComposite(ac);
@@ -642,7 +650,7 @@ public class battle extends JFrame implements KeyListener, ActionListener {
         buffer.setFont(new Font("Comic Sans MS", Font.PLAIN, 50));
         String timeLeft = String.valueOf(threeSecondStart / 60);
         if (threeSecondStart / 60 >= 0.0)
-            buffer.drawString("Starts in " + timeLeft, getWidth() / 2 - 100, getHeight() / 2);
+            buffer.drawString("Starts in " + timeLeft, screenWidth/ 2 - 100, screenHeight / 2);
         g.drawImage(offscreen, 0, 0, this);
     }
 
