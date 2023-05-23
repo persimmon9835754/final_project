@@ -1,6 +1,5 @@
 import javax.swing.*;
 import javax.swing.text.DefaultEditorKit.CopyAction;
-
 //import javax.xml.xpath.XPathEvaluationResult;
 import battle.battle;
 import java.util.ArrayList;
@@ -19,6 +18,10 @@ import java.awt.geom.Path2D;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.util.Scanner;
+import java.io.FileNotFoundException;
+import java.awt.FontMetrics;
 
 public class startup extends JFrame implements KeyListener, ActionListener, MouseListener {
     private Graphics2D buffer;
@@ -43,6 +46,8 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
     int teamA_Avatar = -4;
     int teamB_Avatar = -3;
     int teamC_Avatar = -5;
+    ArrayList<String> teamNames = new ArrayList<String>();
+    ArrayList<String> teamDescriptions = new ArrayList<String>();
 
     public startup() {
         // starts timer on load, and adds key listener
@@ -59,6 +64,15 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
         repaint();
         System.out.println(getWidth() + ", " + getHeight());
         getNewdisplayImages();
+        // Transparent 16 x 16 pixel cursor image.
+        BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+
+        // Create a new blank cursor.
+        Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+                cursorImg, new Point(0, 0), "blank cursor");
+
+        // Set the blank cursor to the JFrame.
+        this.getContentPane().setCursor(blankCursor);
     }
 
     public void makeMouseOverListener() {
@@ -82,7 +96,6 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
         startup frame = new startup();
         frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         frame.setVisible(true);
-
     }
 
     public void getNewdisplayImages() {
@@ -96,21 +109,21 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
             displayImages.add(tempImages.get(randomImage));
             tempImages.remove(tempImages.get(randomImage));
         }
-
+        teamA_Avatar = -1;
+        teamB_Avatar = -1;
+        teamC_Avatar = -1;
     }
 
     // when you push the button it comes this method
     public void actionPerformed(ActionEvent event) {
         Object objSource = event.getSource();
         repaint();
-
     }
 
     public void launchBattleClassicMode() {
         battle battle = new battle();
         battle.factionFolder = "01_classic_rps";
         battle.setSize(FRAME_WIDTH, FRAME_HEIGHT);
-
         battle.setVisible(true);
         setVisible(false);
         dispose();
@@ -121,7 +134,6 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
         battle_health.factionFolder = "01_classic_rps";
         battle_health.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         battle_health.setVisible(true);
-
         setVisible(false);
         dispose();
     }
@@ -139,7 +151,6 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
                 getNewdisplayImages();
                 repaint();
                 break;
-
         }
     }
 
@@ -194,41 +205,55 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
             populateWith(10);
         if (mouseX > 705 && mouseX < 795 && mouseY < 690 && mouseY > 600)
             populateWith(11);
-        if (mouseX > 30 && mouseX < 150 && mouseY > 70 && mouseY < 105)
+        if (mouseX > 0 && mouseX < 160 && mouseY > 70 && mouseY < 105)
             getNewdisplayImages();
-        if (mouseX > 30 && mouseX < 150 && mouseY > 110 && mouseY < 145)
-            ;
-        if (mouseX > 30 && mouseX < 150 && mouseY > 150 && mouseY < 195)
-            ;
-        if (mouseX > 30 && mouseX < 150 && mouseY > 190 && mouseY < 235)
-            ;
-        if (mouseX > 30 && mouseX < 150 && mouseY > 230 && mouseY < 275)
-            ;
-        if (mouseX > 30 && mouseX < 150 && mouseY > 270 && mouseY < 315)
-            ;
-        if (mouseX > 30 && mouseX < 150 && mouseY > 310 && mouseY < 355)
-            ;
-        if (mouseX > 30 && mouseX < 150 && mouseY > 350 && mouseY < 395)
-            ;
-        if (mouseX > 30 && mouseX < 150 && mouseY > 390 && mouseY < 445)
-            ;
-        if (mouseX > 30 && mouseX < 150 && mouseY > 430 && mouseY < 485)
-            ;
-
+        if (mouseX > 0 && mouseX < 160 && mouseY > 110 && mouseY < 145)
+            generatePreset(1);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 150 && mouseY < 195)
+            generatePreset(2);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 190 && mouseY < 235)
+            generatePreset(3);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 230 && mouseY < 275)
+            generatePreset(4);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 270 && mouseY < 315)
+            generatePreset(5);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 310 && mouseY < 355)
+            generatePreset(6);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 350 && mouseY < 395)
+            generatePreset(7);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 390 && mouseY < 445)
+            generatePreset(8);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 430 && mouseY < 485)
+            generatePreset(9);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 470 && mouseY < 525)
+            generatePreset(10);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 510 && mouseY < 565)
+            generatePreset(11);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 550 && mouseY < 605)
+            generatePreset(12);
+        if (mouseX > 0 && mouseX < 160 && mouseY > 590 && mouseY < 645)
+            generatePreset(13);
     }
 
     public void populateWith(int index) {
-        if (teamA_Avatar < 0)
+        if (teamA_Avatar < 0) {
             teamA_Avatar = displayImages.get(index);
-        else if (teamB_Avatar < 0)
+        } else if (teamB_Avatar < 0 && displayImages.get(index) != teamA_Avatar) {
             teamB_Avatar = displayImages.get(index);
-        else if (teamC_Avatar < 0)
+        } else if (teamC_Avatar < 0 && displayImages.get(index) != teamA_Avatar
+                && displayImages.get(index) != teamB_Avatar) {
             teamC_Avatar = displayImages.get(index);
-        else {
+        } else if (teamA_Avatar >= 0 && teamB_Avatar >= 0 && teamC_Avatar >= 0) {
             teamA_Avatar = -1;
             teamB_Avatar = -1;
             teamC_Avatar = -1;
         }
+    }
+
+    public void generatePreset(int index) {
+        System.out.println(index);
+        int imagePos = (index - 1)* 3;
+        teamA_Avatar = 6;
     }
 
     public void mouseReleased(MouseEvent e) {
@@ -241,59 +266,77 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
     }
 
     public void mouseClicked(MouseEvent e) {
-        if (e.getX() > 50 && e.getX() < 450 && e.getY() > 50 && e.getY() < 450) {
-        }
-        System.out.println(e.getX() + ", " + e.getY());
     }
 
     public void loadImages() {
-
         File fileFolder = new File(imageFolderLocation);
         File[] subFolders = (fileFolder.listFiles());
         Arrays.sort(subFolders);
         for (File imageFolder : subFolders) {
             // System.out.println(imageFolder.getName());
             // System.out.println(imageFolder.getAbsolutePath());
-            getSprites(imageFolder.getName());
+            if (String.valueOf(imageFolder.getName()) != ".SynologyWorkingDirectory") {
+
+                getSprites(imageFolder.getName());
+            }
         }
         for (int i = 0; i < arrayFilePaths.size(); i++) {
             arrayImages.add(new ImageIcon(arrayFilePaths.get(i)).getImage());
             arrayImages.set(i, arrayImages.get(i).getScaledInstance(90, 90, Image.SCALE_SMOOTH));
         }
+
     }
 
     public void getSprites(String folder) {
+        if (!folder.equals(".SynologyWorkingDirectory")) {
+            String imageFolder;
+            imageFolder = "img/" + folder;
+            if (new File(imageFolder).exists()) {
+                try {
+                    File initializationFile = new File(imageFolder + "/config.ini");
+                    Scanner initilizationScanner = new Scanner(initializationFile);
+                    int lineCount = 0;
+                    while (initilizationScanner.hasNextLine()) {
+                        lineCount++;
+                        String data = initilizationScanner.nextLine();
+                        data = data.replaceAll("\s", "");
+                        if (lineCount == 0) {
+                            teamNames.add(data);
+                        }
+                        if (lineCount == 1) {
+                            teamNames.add(data);
+                        }
 
-        String imageFolder;
-
-        imageFolder = "img/" + folder;
-        if (new File(imageFolder).exists()) {
-            // System.out.println("file exists");
-            File fileFolder = new File(imageFolder);
-            if ((fileFolder.listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    if (name.startsWith("a_") || name.startsWith("b_") || name.startsWith("c_"))
-                        return true;
-                    return false;
+                    }
+                    initilizationScanner.close();
+                    File fileFolder = new File(imageFolder);
+                    if ((fileFolder.listFiles(new FilenameFilter() {
+                        public boolean accept(File dir, String name) {
+                            if (name.startsWith("a_") || name.startsWith("b_") || name.startsWith("c_"))
+                                return true;
+                            return false;
+                        }
+                    })).length > 0) {
+                        arrayFilePaths.add(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
+                            public boolean accept(File dir, String name) {
+                                return name.startsWith("a_");
+                            }
+                        })[0].getName());
+                        arrayFilePaths.add(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
+                            public boolean accept(File dir, String name) {
+                                return name.startsWith("b_");
+                            }
+                        })[0].getName());
+                        arrayFilePaths.add(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
+                            public boolean accept(File dir, String name) {
+                                return name.startsWith("c_");
+                            }
+                        })[0].getName());
+                    }
+                } catch (FileNotFoundException e) {
+                    System.out.println("An error occurred.");
+                    e.printStackTrace();
                 }
-            })).length > 0) {
-
-                arrayFilePaths.add(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        return name.startsWith("a_");
-                    }
-                })[0].getName());
-                arrayFilePaths.add(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        return name.startsWith("b_");
-                    }
-                })[0].getName());
-                arrayFilePaths.add(imageFolder + "/" + fileFolder.listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        return name.startsWith("c_");
-                    }
-                })[0].getName());
-
             }
         }
     }
@@ -310,24 +353,26 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
         for (String i : arrayFilePaths) {
             // System.out.println(i);
         }
+
+        // start button
+        buffer.setColor(Color.red);
+        buffer.fillRect(500 - 100, 410 - 35, 200, 70);
+
+        // background gradient
         buffer.setColor(Color.lightGray);
         int displayImageX = 250;
         int displayImageY = 500;
         buffer.setStroke(new BasicStroke(5));
         Color endColor = new Color(42, 82, 162);
         Color startColor = new Color(0, 179, 179);
-
         int startX = displayImageX - 50, startY = displayImageY + 50, endX = displayImageX,
                 endY = displayImageY + 200;
-
         GradientPaint gradient = new GradientPaint(startX, startY, startColor, endX, endY, endColor);
         buffer.setPaint(gradient);
-
         buffer.fillRect(500 - 102 * 3, 595 - 105, 102 * 6, 105 * 2);
+        // draw 12 random images
         for (int i = 0; i < 12; i++) {
             buffer.setColor(new Color(148, 148, 184));
-
-            // buffer.draw(new Rectangle(20, 20, 200, 200));
             buffer.setColor(Color.lightGray);
             buffer.fillRect(displayImageX - 45, displayImageY, 90, 90);
             if (mouseX > 205 && mouseX < 795 && mouseY > 500 && mouseY < 690) {
@@ -346,25 +391,37 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
                 displayImageX = 250;
                 displayImageY = 600;
             }
-
         }
-        // classic button
-
+        // preset modes
         buffer.setColor(Color.gray);
-        x = 30;
+        x = 0;
         y = 70;
         buffer.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
-        for (int i = 0; i < 15; i++) {
-            buffer.fillRect(x, y, 120, 35);
+        for (int i = 0; i < 14; i++) {
+            buffer.fillRect(x, y, 160, 35);
+            buffer.setColor(Color.white);
             if (i == 0) {
-                buffer.setColor(Color.white);
-                buffer.drawString("Custom", x + 25, y + 25);
-                buffer.setColor(Color.gray);
+                int stringLength = (int) (buffer.getFontMetrics().getStringBounds("Custom", buffer)
+                        .getWidth());
+                int start = 160 / 2 - stringLength / 2;
+                buffer.drawString("Custom", x + start, y + 25);
+            } else {
+                int stringLength = (int) (buffer.getFontMetrics().getStringBounds(teamNames.get(i - 1), buffer)
+                        .getWidth());
+                int start = 160 / 2 - stringLength / 2;
+                buffer.drawString(teamNames.get(i - 1), x + start, y + 25);
+
             }
+            buffer.setColor(Color.gray);
             y += 40;
         }
+        if (mouseX > 0 && mouseX < 160 && mouseY > 70 && mouseY < 630) {
+            int ypos = (mouseY - 70) / 40;
+            buffer.setColor(Color.white);
+            buffer.drawRect(0 - 1, 70 + ypos * 40 - 1, 162, 37);
+        }
+        // unit count button
         buffer.setStroke(new BasicStroke(2));
-
         x = 760;
         y = 130;
         buffer.setColor(new Color(204, 51, 0));
@@ -401,13 +458,11 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
             buffer.drawString(String.valueOf(unitCount), x + 25, y - 22);
         else
             buffer.drawString(String.valueOf(unitCount), x + 15, y - 22);
-
         buffer.drawString("Unit Count", x + 70, y - 22);
         x = 760;
         y = 280;
         buffer.setColor(Color.lightGray);
         path.reset();
-
         path.moveTo(x, y);
         path.lineTo(x + 60, y);
         path.lineTo(x + 30, y - 30);
@@ -417,6 +472,7 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
             buffer.fill(path);
         else
             buffer.draw(path);
+        // unit speed buttons
         buffer.setColor(Color.lightGray);
         y += 10;
         buffer.fillRect(x - 2, y - 2, 64, 44);
@@ -441,7 +497,7 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
         else
             buffer.drawString(String.valueOf(unitSpeed), x + 5, y - 22);
         buffer.drawString("Unit Speed", x + 70, y - 22);
-        // draw circle
+        // main 3 teams
         buffer.setColor(Color.white);
         buffer.setStroke(new BasicStroke(7));
         buffer.drawOval(500 - 60, 120 - 60, 120, 120);
@@ -453,7 +509,6 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
             buffer.drawImage(arrayImages.get(teamB_Avatar), 380 - 45, 290 - 45, 90, 90, null);
         if (teamC_Avatar >= 0)
             buffer.drawImage(arrayImages.get(teamC_Avatar), 620 - 45, 290 - 45, 90, 90, null);
-
         buffer.setColor(Color.green);
         buffer.drawOval(mouseX, mouseY, 5, 5);
         g.drawImage(offscreen, 0, 0, this);
