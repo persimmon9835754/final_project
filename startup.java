@@ -252,8 +252,10 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
 
     public void generatePreset(int index) {
         System.out.println(index);
-        int imagePos = (index - 1)* 3;
-        teamA_Avatar = 6;
+        int imagePos = (index - 1) * 3;
+        teamA_Avatar = imagePos;
+        teamB_Avatar = imagePos + 1;
+        teamC_Avatar = imagePos + 2;
     }
 
     public void mouseReleased(MouseEvent e) {
@@ -356,8 +358,10 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
 
         // start button
         buffer.setColor(Color.red);
-        buffer.fillRect(500 - 100, 410 - 35, 200, 70);
-
+        buffer.fillRect(500 - 110, 410 - 45, 220, 90);
+        buffer.setColor(Color.black);
+        buffer.setFont(new Font("Comic Sans MS", Font.BOLD, 40));
+        buffer.drawString("START", 435, 425);
         // background gradient
         buffer.setColor(Color.lightGray);
         int displayImageX = 250;
@@ -503,6 +507,36 @@ public class startup extends JFrame implements KeyListener, ActionListener, Mous
         buffer.drawOval(500 - 60, 120 - 60, 120, 120);
         buffer.drawOval(380 - 60, 290 - 60, 120, 120);
         buffer.drawOval(620 - 60, 290 - 60, 120, 120);
+        // arrows
+        x = 460;
+        y = 300;
+        path.reset();
+        path.moveTo(x, y);
+        path.lineTo(x, y - 6);
+        path.lineTo(x + 50, y - 6);
+        path.lineTo(x + 50, y - 15);
+        path.lineTo(x + 80, y );
+        path.lineTo(x + 50, y + 15);
+        path.lineTo(x + 50, y + 6);
+        path.lineTo(x, y + 6);
+        path.lineTo(x, y);
+        path.closePath();
+        buffer.fill(path);
+        //arrow 2
+        x = 560;
+        y = 180;
+        path.reset();
+        path.moveTo(x, y);
+        path.lineTo(x+ 16, y);
+        path.lineTo(x + 12, y +6);
+        path.lineTo(x + 24, y + 40);
+        path.lineTo(x + 22, y +42);
+        path.lineTo(x + 10, y + 15);
+        path.lineTo(x + 8, y + 18);
+        path.lineTo(x, y);
+        path.closePath();
+        buffer.fill(path);
+
         if (teamA_Avatar >= 0)
             buffer.drawImage(arrayImages.get(teamA_Avatar), 500 - 45, 120 - 45, 90, 90, null);
         if (teamB_Avatar >= 0)
