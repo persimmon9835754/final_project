@@ -111,13 +111,12 @@ public class battle extends JFrame implements KeyListener, ActionListener {
                 data = data.replaceAll("\s", "");
                 String[] stringsOfInitValues = data.split(",");
                 if (lineCount == 1) {
-                    gameMode = stringsOfInitValues[1];
-                } else if (lineCount < 5) {
+                    gameMode = data;
+                } else if (lineCount <= 5 && lineCount >= 3) {
                     for (int i = 0; i < stringsOfInitValues.length; i++)
-                        teamStats[lineCount - 2][i] = stringsOfInitValues[i];
-                    teamStats[lineCount - 2][8] = gameMode;
+                        teamStats[lineCount - 3][i] = stringsOfInitValues[i];
+                    teamStats[lineCount - 3][8] = gameMode;
                 }
-                // System.out.println("Line " + lineCount + ": " + data);
             }
             initilizationScanner.close();
         } catch (FileNotFoundException e) {
@@ -139,7 +138,6 @@ public class battle extends JFrame implements KeyListener, ActionListener {
         imageTeamA = imageTeamA.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
         imageTeamB = imageTeamB.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
         imageTeamC = imageTeamC.getScaledInstance(imageWidth, imageHeight, Image.SCALE_DEFAULT);
-        System.out.println(Frame.WIDTH + ", " + Frame.HEIGHT);
     }
 
     // when you push the button it comes this method
@@ -237,8 +235,6 @@ public class battle extends JFrame implements KeyListener, ActionListener {
         for (int i = 0; i < size3; i++) {
             teamC.add(teamC.size(), getUnit(2));
         }
-        System.out.println(
-                "Number of units before collisions: " + teamA.size() + " " + teamB.size() + " " + teamC.size());
         if (unitCount <= 25) {
             try {
                 checkCollisions();
@@ -267,15 +263,12 @@ public class battle extends JFrame implements KeyListener, ActionListener {
                 System.out.println("Error");
             }
         }
-        System.out
-                .println("Number of units after collisions: " + teamA.size() + " " + teamB.size() + " " + teamC.size());
     }
 
     public double[] getRandomDirection(double x1, double x2, double y1, double y2, double maxSpeed) {
         double newVelocity[] = new double[10];
         double xDist = (x1 - x2) * (Math.random() * .4 + 0.8);
         double yDist = (y1 - y2) * (Math.random() * .4 + 0.8);
-        // System.out.println(xDist + ", " + yDist);
         double slope = Math.sqrt(xDist * xDist + yDist * yDist);
         while (Math.abs(slope) > maxSpeed) {
             xDist *= 0.99;
@@ -403,7 +396,6 @@ public class battle extends JFrame implements KeyListener, ActionListener {
             if (i.yCoord > screenHeight - (imageHeight) || i.yCoord < (imageHeight / 2)) {
                 i.velY *= -1;
                 i.yCoord += i.velY;
-                System.out.println(i.yCoord);
             }
             
         }
