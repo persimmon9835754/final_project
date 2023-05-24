@@ -35,7 +35,9 @@ public class battle extends JFrame implements KeyListener, ActionListener {
     private boolean inputUp;
     private boolean inputDown;
     private boolean inputRight;
-    private int unitCount = 20;
+     public static int unitCount = 20;
+    // public static int unitSize = 40;
+    // public static int unitSpeed = 5;
     private int heroX = 0;
     private int heroY = 0;
     Image imageTeamA;
